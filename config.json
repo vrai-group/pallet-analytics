@@ -1,6 +1,6 @@
 {
    "param": {
       "flip": true,
-      "url": "http://192.168.0.250/elabora2_hba.php?"
+      "url": "http://192.168.0.251/elabora2_hba.php?"
    }
 }
