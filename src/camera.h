@@ -34,6 +34,9 @@ class Camera : public QThread
 public:
     Camera(const QString oni_filename);
     ~Camera();
+    void drawCircles(cv::Mat FrameImage);
+    void getRealPoints();
+    void updatePoints();
     int init(int res_x, int res_y, int fps);
     void stop();
     void run();
@@ -93,7 +96,16 @@ private:
 
     int mode;
 
+
     vector<cv::Point> points;
+
+    struct Realpoints{
+      float x,y;
+    };
+
+    vector<Realpoints> realpoints;
+
+
 
 
 };

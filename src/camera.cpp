@@ -12,7 +12,6 @@
 
 using namespace std;
 using namespace openni;
-
 /// camera setup
 Camera::Camera(const QString oni_filename)
 {
@@ -28,6 +27,8 @@ Camera::~Camera()
     device.close();
     OpenNI::shutdown();
 }
+
+
 
 /// camera init
 int Camera::init(int res_x, int res_y, int fps)
@@ -250,10 +251,8 @@ void Camera::getRDepth()
 {
     if (depthFrameRef.isValid()) {
         rDepth = cv::Mat::zeros(depthMat.rows, depthMat.cols, CV_32FC3);
-
         int cols = depthFrameRef.getWidth();
         int rows = depthFrameRef.getHeight();
-
         float worldX, worldY, worldZ;
 
         for( int y = 0; y < rows; y++ )
@@ -274,10 +273,67 @@ void Camera::getRDepth()
                 {
                     rDepth.at<cv::Point3f>(y, x) = cv::Point3f(worldX,worldY,worldZ);
                     // from mm to meters
+
                 }
+
             }
         }
     }
+}
+
+
+///from depth to real
+void Camera::getRealPoints(){
+
+    float realX,realY,realZ;
+
+    for (unsigned int i=0;i<points.size();i++){
+
+     openni::CoordinateConverter::convertDepthToWorld(depthStream,points[i].x,points[i].y,hp1[i],&realX,&realY,&realZ);
+
+     if(realpoints.size()==0)
+        realpoints.push_back(Realpoints());
+
+     realpoints[i].x=realX;
+     realpoints[i].y=realY;
+    }
+
+}
+
+/// draw circles over the frame
+void Camera:: drawCircles(cv::Mat FrameImage){
+
+    for(unsigned int i=0; i<points.size(); i++)
+    {
+     cv::circle(FrameImage,cv::Point(points[i].x,points[i].y), 4, cv::Scalar(0,255,0), -1);
+    }
+}
+
+///from real to depth
+void Camera::updatePoints(){
+
+    int cols = depthFrameRef.getWidth();
+    int rows = depthFrameRef.getHeight();
+    int x,y;
+    DepthPixel  z=0;
+
+    for(int i=0; i<points.size(); i++)
+    {
+        for(float j=0; j<3000; j++)  //scandisco tutte le altezze possibili fino a 3 metri
+        {
+        openni::CoordinateConverter::convertWorldToDepth(depthStream, realpoints[i].x, realpoints[i].y,j, &x, &y, &z);
+               if(x>=0 && x<=cols && y>=0 && y<=rows)
+                {
+                    if(z==static_cast<int>(rDepth.at<cv::Point3f>(y, x).z))
+                    {
+                        points[i].x=x;
+                        points[i].y=y;
+                    }
+                }
+
+         }
+    }
+
 }
 
 cv::Mat Camera::getDepthFrame(const bool convert_to_8bit)
@@ -320,13 +376,13 @@ void Camera::process() {
     case 1: filename="hpoints0.csv"; break;  //fase di setup floor
     case 2: filename="hpoints1.csv"; break;  //fase di setup primo livello
     }
-
     getRDepth();
 
     if (getMode()==3)              //Fase di run
     {
         for(unsigned int i=0; i<points.size(); i++)
         {
+            updatePoints();
             cv::Vec3f realPoint = rDepth.at<cv::Vec3f>(points[i].y, points[i].x);
             double pezzicalc=(hp0[i]-realPoint[2])/(hp0[i]-hp1[i]);
             qDebug() << "x=" << points[i].x << "y=" << points[i].y << "Pavimento:" << hp0[i] << "Altezza Pacco:" << hp1[i] << "Altezza pila:"
@@ -359,6 +415,7 @@ void Camera::process() {
     }
     pezzi_old=pezzi_now;
     pezzi_now.clear();
+
 }
 
 void Camera::loadValues()
@@ -381,6 +438,8 @@ void Camera::loadValues()
     h0.close();
     h1.close();
 }
+
+
 
 void Camera::loadPoints()
 {
@@ -418,4 +477,5 @@ void Camera::setFlipflag(bool value)
 {
     flipflag = value;
 }
+
 

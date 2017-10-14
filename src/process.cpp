@@ -12,6 +12,7 @@
 
 Process::Process(QObject *parent) : QObject(parent)
 {
+
 }
 
 void Process::init() {
@@ -56,7 +57,8 @@ void Process::start(int x, int y, int mode)
     {
         if (mode==1)
         {
-            for(unsigned int i=0;i<5;i++) cam->getFrame();
+            for(unsigned int i=0;i<5;i++)
+            cam->getFrame();
             cv::imwrite(QString("modello.png").toLocal8Bit().data(),cam->getBgrMat());
             setup("modello.png");      //Point Selection
             cam->loadPoints();
@@ -75,6 +77,7 @@ void Process::start(int x, int y, int mode)
             connect(cam, SIGNAL(sigFrameImageReady(cv::Mat)),this,SLOT(FrameImageReady(cv::Mat)));
             cam->loadPoints();
             cam->loadValues();
+            cam->getRealPoints();
             cam->start();
         }
     }
@@ -107,5 +110,7 @@ void Process::readJson()
 }
 void Process::FrameImageReady(cv::Mat FrameImage)
 {
+
+    cam->drawCircles(FrameImage);
     cv::imshow("bgr", FrameImage);
 }
