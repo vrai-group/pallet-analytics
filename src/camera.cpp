@@ -287,6 +287,8 @@ void Camera::getRealPoints(){
 
     float realX,realY,realZ;
 
+    oldpoints=points;
+
     for (unsigned int i=0;i<points.size();i++){
 
      openni::CoordinateConverter::convertDepthToWorld(depthStream,points[i].x,points[i].y,hp1[i],&realX,&realY,&realZ);
@@ -306,6 +308,15 @@ void Camera:: drawCircles(cv::Mat FrameImage){
     for(unsigned int i=0; i<points.size(); i++)
     {
      cv::circle(FrameImage,cv::Point(points[i].x,points[i].y), 4, cv::Scalar(0,255,0), -1);
+    }
+}
+
+/// draw initials circles over the frame
+void Camera:: drawInitialCircles(cv::Mat FrameImage){
+
+    for(unsigned int i=0; i<oldpoints.size(); i++)
+    {
+     cv::circle(FrameImage,cv::Point(oldpoints[i].x,oldpoints[i].y), 4, cv::Scalar(0,0,255), -1);
     }
 }
 

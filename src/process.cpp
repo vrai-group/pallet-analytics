@@ -111,6 +111,9 @@ void Process::readJson()
 void Process::FrameImageReady(cv::Mat FrameImage)
 {
 
+    cam->drawInitialCircles(FrameImage);
+
     cam->drawCircles(FrameImage);
+
     cv::imshow("bgr", FrameImage);
 }

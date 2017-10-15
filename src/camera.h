@@ -35,6 +35,7 @@ public:
     Camera(const QString oni_filename);
     ~Camera();
     void drawCircles(cv::Mat FrameImage);
+    void drawInitialCircles(cv::Mat FrameImage);
     void getRealPoints();
     void updatePoints();
     int init(int res_x, int res_y, int fps);
@@ -98,6 +99,7 @@ private:
 
 
     vector<cv::Point> points;
+    vector<cv::Point> oldpoints;
 
     struct Realpoints{
       float x,y;
