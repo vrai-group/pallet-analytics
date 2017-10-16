@@ -119,6 +119,17 @@ void Camera::run(){
             }
             if (mode==3)
             {
+                if(pezzi_now.size()==0)
+                    //pezzi_now=pezzi_old;
+                {
+                    for(int i=0;i<points.size();i++)
+                        cv::putText(bgrMat,QString::number(pezzi_old[i]).toStdString(),cv::Point(points[i].x+5,points[i].y+5),cv::FONT_HERSHEY_PLAIN,1,CV_RGB(255,255,255),2);
+                }else
+                {
+                    for(int i=0;i<points.size();i++)
+                        cv::putText(bgrMat,QString::number(pezzi_now[i]).toStdString(),cv::Point(points[i].x+5,points[i].y+5),cv::FONT_HERSHEY_PLAIN,1,CV_RGB(255,255,255),2);
+                }
+
                 emit sigFrameImageReady(bgrMat.clone()) ;
             }
         }
@@ -330,7 +341,7 @@ void Camera::updatePoints(){
 
     for(int i=0; i<points.size(); i++)
     {
-        for(float j=0; j<3000; j++)  //scandisco tutte le altezze possibili fino a 3 metri
+        for(float j=3000; j>0; j--)  //scandisco tutte le altezze possibili fino a 3 metri
         {
         openni::CoordinateConverter::convertWorldToDepth(depthStream, realpoints[i].x, realpoints[i].y,j, &x, &y, &z);
                if(x>=0 && x<=cols && y>=0 && y<=rows)
@@ -339,6 +350,7 @@ void Camera::updatePoints(){
                     {
                         points[i].x=x;
                         points[i].y=y;
+                        break;
                     }
                 }
 
@@ -380,6 +392,10 @@ cv::Mat Camera::getBgrMat() {
 /// process
 void Camera::process() {
 
+    int cols = depthFrameRef.getWidth();
+    int rows = depthFrameRef.getHeight();
+    double totframe =cv::sqrt(cols*cols+rows*rows);
+
     string filename;     //Fase di run
 
     switch (getMode())
@@ -401,6 +417,9 @@ void Camera::process() {
             int pezzi=round(pezzicalc);
             if (pezzi<0 || pezzi >10) pezzi=0;
             pezzi_now.push_back(pezzi);
+            cv::Point2f diff =  points[i]-oldpoints[i];
+            double res = cv::sqrt(diff.x*diff.x+diff.y*diff.y);
+            qDebug()<<"scostamento "<<res<<" pixel pari al "<<(res/totframe)*100<<"% del frame";
         }
         qDebug()<< "now:"<<pezzi_now[0]<<pezzi_now[1]<<pezzi_now[2]<<pezzi_now[3]<<pezzi_now[4]<<pezzi_now[5];
         qDebug()<<"old:"<<pezzi_old[0]<<pezzi_old[1]<<pezzi_old[2]<<pezzi_old[3]<<pezzi_old[4]<<pezzi_old[5];
